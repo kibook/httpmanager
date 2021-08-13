@@ -4,19 +4,19 @@
 -- @module neturl
 -- @alias	M
 
-Url = {}
-Url.version = "0.9.0"
+local M = {}
+M.version = "0.9.0"
 
 --- url options
 -- separator is set to `&` by default but could be anything like `&amp;amp;` or `;`
 -- @todo Add an option to limit the size of the argument table
-Url.options = {
+M.options = {
 	separator = '&'
 }
 
 --- list of known and common scheme ports
 -- as documented in <a href="http://www.iana.org/assignments/uri-schemes.html">IANA URI scheme list</a>
-Url.services = {
+M.services = {
 	acap     = 674,
 	cap      = 1026,
 	dict     = 2628,
@@ -93,7 +93,7 @@ end
 
 --- builds the url
 -- @return a string representing the built url
-function Url:build()
+function M:build()
 	local url = ''
 	if self.path then
 		local path = self.path
@@ -108,7 +108,7 @@ function Url:build()
 	end
 	if self.host then
 		local authority = self.host
-		if self.port and self.scheme and Url.services[self.scheme] ~= self.port then
+		if self.port and self.scheme and M.services[self.scheme] ~= self.port then
 			authority = authority .. ':' .. self.port
 		end
 		local userinfo
@@ -143,10 +143,10 @@ end
 -- @param sep The separator to use (optional)
 -- @param key The parent key if the value is multi-dimensional (optional)
 -- @return a string representing the built querystring
-function Url.buildQuery(tab, sep, key)
+function M.buildQuery(tab, sep, key)
 	local query = {}
 	if not sep then
-		sep = Url.options.separator or '&'
+		sep = M.options.separator or '&'
 	end
 	local keys = {}
 	for k in pairs(tab) do
@@ -160,7 +160,7 @@ function Url.buildQuery(tab, sep, key)
 			name = string.format('%s[%s]', tostring(key), tostring(name))
 		end
 		if type(value) == 'table' then
-			query[#query+1] = Url.buildQuery(value, sep, name)
+			query[#query+1] = M.buildQuery(value, sep, name)
 		else
 			local value = encodeValue(tostring(value))
 			if value ~= "" then
@@ -178,11 +178,11 @@ end
 -- with PHP usage of brackets in key names like ?param[key]=value
 -- @param str The querystring to parse
 -- @param sep The separator between key/value pairs, defaults to `&`
--- @todo limit the max number of parameters with Url.options.max_parameters
+-- @todo limit the max number of parameters with M.options.max_parameters
 -- @return a table representing the query key/value pairs
-function Url.parseQuery(str, sep)
+function M.parseQuery(str, sep)
 	if not sep then
-		sep = Url.options.separator or '&'
+		sep = M.options.separator or '&'
 	end
 
 	local values = {}
@@ -229,19 +229,19 @@ function Url.parseQuery(str, sep)
 			t = t[k]
 		end
 	end
-	setmetatable(values, { __tostring = Url.buildQuery })
+	setmetatable(values, { __tostring = M.buildQuery })
 	return values
 end
 
 --- set the url query
 -- @param query Can be a string to parse or a table of key/value pairs
 -- @return a table representing the query key/value pairs
-function Url:setQuery(query)
+function M:setQuery(query)
 	local query = query
 	if type(query) == 'table' then
-		query = Url.buildQuery(query)
+		query = M.buildQuery(query)
 	end
-	self.query = Url.parseQuery(query)
+	self.query = M.parseQuery(query)
 	return query
 end
 
@@ -249,7 +249,7 @@ end
 -- The authority is parsed to find the user, password, port and host if available.
 -- @param authority The string representing the authority
 -- @return a string with what remains after the authority was parsed
-function Url:setAuthority(authority)
+function M:setAuthority(authority)
 	self.authority = authority
 	self.port = nil
 	self.host = nil
@@ -290,10 +290,10 @@ end
 -- query, fragment
 -- @param url Url string
 -- @return a table with the different parts and a few other functions
-function Url.parse(url)
+function M.parse(url)
 	local comp = {}
-	Url.setAuthority(comp, "")
-	Url.setQuery(comp, "")
+	M.setAuthority(comp, "")
+	M.setQuery(comp, "")
 
 	local url = tostring(url or '')
 	url = url:gsub('#(.*)$', function(v)
@@ -305,19 +305,19 @@ function Url.parse(url)
 		return ''
 	end)
 	url = url:gsub('%?(.*)', function(v)
-		Url.setQuery(comp, v)
+		M.setQuery(comp, v)
 		return ''
 	end)
 	url = url:gsub('^//([^/]*)', function(v)
-		Url.setAuthority(comp, v)
+		M.setAuthority(comp, v)
 		return ''
 	end)
 	comp.path = decode(url, true)
 
 	setmetatable(comp, {
-		__index = Url,
+		__index = M,
 		__concat = concat,
-		__tostring = Url.build}
+		__tostring = M.build}
 	)
 	return comp
 end
@@ -326,7 +326,7 @@ end
 -- This function will also remove multiple slashes
 -- @param path The string representing the path to clean
 -- @return a string of the path without unnecessary dots and segments
-function Url.removeDotSegments(path)
+function M.removeDotSegments(path)
 	local fields = {}
 	if string.len(path) == 0 then
 		return ""
@@ -404,12 +404,12 @@ end
 --- builds a new url by using the one given as parameter and resolving paths
 -- @param other A string or a table representing a url
 -- @return a new url table
-function Url:resolve(other)
+function M:resolve(other)
 	if type(self) == "string" then
-		self = Url.parse(self)
+		self = M.parse(self)
 	end
 	if type(other) == "string" then
-		other = Url.parse(other)
+		other = M.parse(other)
 	end
 	if other.scheme then
 		return other
@@ -434,9 +434,9 @@ end
 --- normalize a url path following some common normalization rules
 -- described on <a href="http://en.wikipedia.org/wiki/URL_normalization">The URL normalization page of Wikipedia</a>
 -- @return the normalized path
-function Url:normalize()
+function M:normalize()
 	if type(self) == 'string' then
-		self = Url.parse(self)
+		self = M.parse(self)
 	end
 	if self.path then
 		local path = self.path
@@ -448,4 +448,4 @@ function Url:normalize()
 	return self
 end
 
-return Url
+Url = M

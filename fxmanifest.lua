@@ -10,5 +10,6 @@ server_only "yes"
 
 server_scripts {
 	"url.lua",
+	"puremagic.lua",
 	"server.lua"
 }
