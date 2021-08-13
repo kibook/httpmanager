@@ -18,15 +18,37 @@ SetHttpHandler(function(req, res)
 	local f = io.open(absolutePath, "rb")
 
 	if f then
-		local fileSize = f:seek("end")
-		f:seek("set", 0)
+		local offset
 
-		res.writeHead(200, {
+		if req.headers.Range then
+			offset = tonumber(req.headers.Range:match("^bytes=(%d+).*$"))
+		end
+
+		if offset then
+			offset = 0
+		end
+
+		local fileSize = f:seek("end")
+		f:seek("set", offset)
+
+		local headers = {
 			["Content-Type"] = mimeType,
-			["Content-Length"] = tostring(fileSize),
 			["Transfer-Encoding"] = "identity",
-			["Connection"] = "close"
-		})
+			["Accept-Ranges"] = "bytes"
+		}
+
+		if offset > 0 then
+			local rangeSize = fileSize - offset
+
+			headers["Content-Range"] = ("bytes %d-%d/%d"):format(offset, rangeSize, fileSize)
+			headers["Content-Length"] = tostring(rangeSize)
+
+			res.writeHead(206, headers)
+		else
+			headers["Content-Length"] = tostring(fileSize)
+
+			res.writeHead(200, headers)
+		end
 
 		if req.method ~= "HEAD" then
 			while true do
