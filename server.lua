@@ -18,18 +18,24 @@ SetHttpHandler(function(req, res)
 	local f = io.open(absolutePath, "rb")
 
 	if f then
-		local offset
+		local startBytes, endBytes
 
 		if req.headers.Range then
-			offset = tonumber(req.headers.Range:match("^bytes=(%d+).*$"))
+			local s, e = req.headers.Range:match("^bytes=(%d+)-(%d+)$")
+			startBytes = tonumber(s)
+			endBytes = tonumber(e)
 		end
 
-		if not offset then
-			offset = 0
+		if not startBytes then
+			startBytes = 0
 		end
 
 		local fileSize = f:seek("end")
-		f:seek("set", offset)
+		f:seek("set", startBytes)
+
+		if not endBytes then
+			endBytes = fileSize - 1
+		end
 
 		local headers = {
 			["Content-Type"] = mimeType,
@@ -37,11 +43,9 @@ SetHttpHandler(function(req, res)
 			["Accept-Ranges"] = "bytes"
 		}
 
-		if offset > 0 then
-			local rangeSize = fileSize - offset
-
-			headers["Content-Range"] = ("bytes %d-%d/%d"):format(offset, rangeSize, fileSize)
-			headers["Content-Length"] = tostring(rangeSize)
+		if req.headers.Range then
+			headers["Content-Range"] = ("bytes %d-%d/%d"):format(startBytes, endBytes, fileSize)
+			headers["Content-Length"] = tostring(endBytes - startBytes + 1)
 
 			res.writeHead(206, headers)
 		else
