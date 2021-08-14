@@ -24,7 +24,7 @@ SetHttpHandler(function(req, res)
 			offset = tonumber(req.headers.Range:match("^bytes=(%d+).*$"))
 		end
 
-		if offset then
+		if not offset then
 			offset = 0
 		end
 
