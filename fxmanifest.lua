@@ -1,15 +1,16 @@
 fx_version "cerulean"
 game "common"
 
-name "filemanager"
+name "httpmanager"
 author "kibukj"
-description "Minimal file server for FiveM/RedM"
-repository "https://github.com/kibook/filemanager"
+description "HTTP handler library for FiveM and RedM"
+repository "https://github.com/kibook/httpmanager"
 
 server_only "yes"
 
 server_scripts {
 	"url.lua",
 	"puremagic.lua",
-	"server.lua"
+	"httphandler.lua",
+	"main.lua"
 }
