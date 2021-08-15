@@ -10,7 +10,7 @@ server_only "yes"
 
 server_scripts {
 	"url.lua",
-	"puremagic.lua",
+	"mime.lua",
 	"httphandler.lua",
 	"main.lua"
 }

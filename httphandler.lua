@@ -39,8 +39,10 @@ local function createHttpHandler(options)
 
 		if options.mimeTypes[extension] then
 			return options.mimeTypes[extension]
+		elseif MimeTypes[extension] then
+			return MimeTypes[extension]
 		else
-			return PureMagic.via_path(path)
+			return "application/octet-stream"
 		end
 	end
 
