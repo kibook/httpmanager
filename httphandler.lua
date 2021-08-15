@@ -98,19 +98,18 @@ local function createHttpHandler(options)
 			local startBytes, endBytes
 
 			if req.headers.Range then
-				local s, e = req.headers.Range:match("^bytes=(%d+)-(%d+)$")
-				startBytes = tonumber(s)
-				endBytes = tonumber(e)
+				startBytes = tonumber(req.headers.Range:match("^bytes=(%d+)-.*$"))
+				endBytes = tonumber(req.headers.Range:match("^bytes=%d+-(%d+)$"))
 			end
 
-			if not startBytes then
+			if not startBytes or startBytes < 0 then
 				startBytes = 0
 			end
 
 			local fileSize = f:seek("end")
 			f:seek("set", startBytes)
 
-			if not endBytes then
+			if not endBytes or endBytes >= fileSize then
 				endBytes = fileSize - 1
 			end
 
