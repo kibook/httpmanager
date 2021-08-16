@@ -134,9 +134,19 @@ local function createHttpHandler(options)
 
 			if req.method ~= "HEAD" then
 				while true do
+					if startBytes > endBytes then
+						break
+					end
+
 					local block = f:read(blockSize)
-					if not block then break end
+
+					if not block then
+						break
+					end
+
 					res.write(block)
+
+					startBytes = startBytes + blockSize
 				end
 			end
 
