@@ -11,8 +11,11 @@ local defaultOptions = {
 	routes = {}
 }
 
--- The size of each block of a response
-local blockSize = 8192
+-- The size of each block used when reading a file on disk
+local blockSize = 131072
+
+-- Maximum number of bytes to send in one response
+local maxContentLength = 5242880
 
 local function createHttpHandler(options)
 	local resourceName = GetInvokingResource() or GetCurrentResourceName()
@@ -109,8 +112,8 @@ local function createHttpHandler(options)
 			local fileSize = f:seek("end")
 			f:seek("set", startBytes)
 
-			if not endBytes or endBytes >= fileSize then
-				endBytes = fileSize - 1
+			if not endBytes then
+				endBytes = math.min(startBytes + maxContentLength, fileSize) - 1
 			end
 
 			local headers = {
@@ -119,7 +122,7 @@ local function createHttpHandler(options)
 				["Accept-Ranges"] = "bytes"
 			}
 
-			if req.headers.Range then
+			if endBytes < fileSize - 1 then
 				statusCode = 206
 
 				headers["Content-Range"] = ("bytes %d-%d/%d"):format(startBytes, endBytes, fileSize)
@@ -132,27 +135,31 @@ local function createHttpHandler(options)
 
 			res.writeHead(statusCode, headers)
 
-			if req.method ~= "HEAD" then
-				while true do
-					if startBytes > endBytes then
-						break
+			Citizen.CreateThread(function()
+				if req.method ~= "HEAD" then
+					while true do
+						if startBytes > endBytes then
+							break
+						end
+
+						local block = f:read(blockSize)
+
+						if not block then
+							break
+						end
+
+						res.write(block)
+
+						startBytes = startBytes + blockSize
+
+						Citizen.Wait(0)
 					end
-
-					local block = f:read(blockSize)
-
-					if not block then
-						break
-					end
-
-					res.write(block)
-
-					startBytes = startBytes + blockSize
 				end
-			end
 
-			res.send()
+				res.send()
 
-			f:close()
+				f:close()
+			end)
 		else
 			statusCode = 404
 
