@@ -214,6 +214,10 @@ local function createHttpHandler(options)
 			return false
 		end
 
+		if not options.authorization[username] then
+			return false
+		end
+
 		if not verifyPassword(password, options.authorization[username]) then
 			return false
 		end
