@@ -52,33 +52,41 @@ local function createHttpHandler(options)
 		end
 	end
 
-	local function sendError(res, code, extraHeaders)
-		local headers = {["Content-Type"] = "text/html"}
+	local function sendError(req, res, code, headers)
+		if not code then
+			code = 500
+		end
 
-		if extraHeaders then
-			for h, v in pairs(extraHeaders) do
-				headers[h] = v
-			end
+		if not headers then
+			headers = {}
+		end
+
+		if not headers["Content-Type"] then
+			headers["Content-Type"] = "text/html"
 		end
 
 		res.writeHead(code, headers)
 
-		local resource, path
-
-		if options.errorPages[code] then
-			resource = resourceName
-			path = options.documentRoot .. "/" .. options.errorPages[code]
+		if req.method == "HEAD" then
+			res.send()
 		else
-			resource = mainResourceName
-			path = defaultOptions.documentRoot .. "/" .. code .. ".html"
-		end
+			local resource, path
 
-		local data = LoadResourceFile(resource, path)
+			if options.errorPages[code] then
+				resource = resourceName
+				path = options.documentRoot .. "/" .. options.errorPages[code]
+			else
+				resource = mainResourceName
+				path = defaultOptions.documentRoot .. "/" .. code .. ".html"
+			end
 
-		if data then
-			res.send(data)
-		else
-			res.send("Error: " .. code)
+			local data = LoadResourceFile(resource, path)
+
+			if data then
+				res.send(data)
+			else
+				res.send("Error: " .. code)
+			end
 		end
 	end
 
@@ -174,7 +182,7 @@ local function createHttpHandler(options)
 		else
 			statusCode = 404
 
-			sendError(res, statusCode)
+			sendError(req, res, statusCode)
 		end
 
 		log {
@@ -188,6 +196,32 @@ local function createHttpHandler(options)
 		}
 
 		return statusCode
+	end
+
+	local function sendJson(req, res, data, code, headers)
+		if not code then
+			code = 200
+		end
+
+		if not headers then
+			headers = {}
+		end
+
+		if not headers["Content-Type"] then
+			headers["Content-Type"] = "application/json"
+		end
+
+		res.writeHead(code, headers)
+
+		if req.method == "HEAD" then
+			res.send()
+		else
+			if type(data) == "string" then
+				res.send(data)
+			else
+				res.send(json.encode(data))
+			end
+		end
 	end
 
 	local function isAuthorized(req, path)
@@ -249,7 +283,7 @@ local function createHttpHandler(options)
 		local url = Url.normalize(req.path)
 
 		if options.authorization and not isAuthorized(req, url.path) then
-			sendError(res, 401, {
+			sendError(req, res, 401, {
 				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(resourceName)
 			})
 			return
@@ -262,11 +296,15 @@ local function createHttpHandler(options)
 				req.url = url
 
 				res.sendError = function(code)
-					sendError(res, code)
+					sendError(req, res, code)
 				end
 
 				res.sendFile = function(path)
 					sendFile(req, res, path)
+				end
+
+				res.sendJson = function(data, code, headers)
+					sendJson(req, res, data, code, headers)
 				end
 
 				local helpers = {
@@ -299,7 +337,7 @@ local function createHttpHandler(options)
 
 			sendFile(req, res, url.path)
 		else
-			sendError(res, 404)
+			sendError(req, res, 404)
 		end
 	end
 end
