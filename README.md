@@ -42,7 +42,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 
 | Option           | Description                                                                                  | Default        |
 |------------------|----------------------------------------------------------------------------------------------|----------------|
-| `rootDir`        | The directory in the resource folder where files are served from.                            | `"files"`      |
+| `documentRoot`   | The directory in the resource folder where files are served from.                            | `"files"`      |
 | `directoryIndex` | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
 | `auth`           | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
 | `log`            | Whether to log requests to a file in the resource directory.                                 | `false`        |
@@ -53,7 +53,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 
 ```lua
 SetHttpHandler(exports.httpmanager:createHttpHandler {
-	rootDir = "root",
+	documentRoot = "root",
 	directoryIndex = "index.html",
 	auth = {
 		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"

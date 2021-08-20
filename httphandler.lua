@@ -2,7 +2,7 @@ local mainResourceName = GetCurrentResourceName()
 
 -- Default options for new HTTP handlers
 local defaultOptions = {
-	rootDir = "files",
+	documentRoot = "files",
 	directoryIndex = "index.html",
 	log = false,
 	logFile = "log.json",
@@ -66,10 +66,10 @@ local function createHttpHandler(options)
 
 		if options.errorPages[code] then
 			resource = resourceName
-			path = options.rootDir .. "/" .. options.errorPages[code]
+			path = options.documentRoot .. "/" .. options.errorPages[code]
 		else
 			resource = mainResourceName
-			path = defaultOptions.rootDir .. "/" .. code .. ".html"
+			path = defaultOptions.documentRoot .. "/" .. code .. ".html"
 		end
 
 		local data = LoadResourceFile(resource, path)
@@ -98,7 +98,7 @@ local function createHttpHandler(options)
 	end
 
 	local function sendFile(req, res, path)
-		local relativePath = options.rootDir .. path
+		local relativePath = options.documentRoot .. path
 		local absolutePath = resourcePath .. "/" .. relativePath
 
 		local mimeType = getMimeType(absolutePath)
@@ -270,7 +270,7 @@ local function createHttpHandler(options)
 			end
 		end
 
-		if options.rootDir then
+		if options.documentRoot then
 			if url.path:sub(-1) == "/" then
 				url.path = url.path .. options.directoryIndex
 			end
