@@ -37,6 +37,8 @@ local function createHttpHandler(options)
 		handlerLog = json.decode(LoadResourceFile(resourceName, options.logFile)) or {}
 	end
 
+	local authorizations = {}
+
 	local function getMimeType(path)
 		local extension = path:match("^.+%.(.+)$")
 
@@ -49,8 +51,16 @@ local function createHttpHandler(options)
 		end
 	end
 
-	local function sendError(res, code)
-		res.writeHead(code, {["Content-Type"] = "text/html"})
+	local function sendError(res, code, extraHeaders)
+		local headers = {["Content-Type"] = "text/html"}
+
+		if extraHeaders then
+			for h, v in pairs(extraHeaders) do
+				headers[h] = v
+			end
+		end
+
+		res.writeHead(code, headers)
 
 		local resource, path
 
@@ -179,7 +189,48 @@ local function createHttpHandler(options)
 		return statusCode
 	end
 
+	local function isAuthorized(req)
+		local auth = req.headers.Authorization
+
+		if not auth then
+			return false
+		end
+
+		if authorizations[auth] then
+			return true
+		end
+
+		local encoded = auth:match("^Basic (.+)$")
+
+		if not encoded then
+			return false
+		end
+
+		local decoded = base64.decode(encoded)
+
+		local username, password = decoded:match("^([^:]+):(.+)$")
+
+		if not (username and password) then
+			return false
+		end
+
+		if not verifyPassword(password, options.auth[username]) then
+			return false
+		end
+
+		authorizations[auth] = true
+
+		return true
+	end
+
 	return function(req, res)
+		if options.auth and not isAuthorized(req) then
+			sendError(res, 401, {
+				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(resourceName)
+			})
+			return
+		end
+
 		local url = Url.normalize(req.path)
 
 		for pattern, callback in pairs(options.routes) do

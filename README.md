@@ -44,6 +44,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 |------------------|----------------------------------------------------------------------------------------------|----------------|
 | `rootDir`        | The directory in the resource folder where files are served from.                            | `"files"`      |
 | `directoryIndex` | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
+| `auth`           | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
 | `log`            | Whether to log requests to a file in the resource directory.                                 | `false`        |
 | `logFile`        | If `log` is `true`, store the log in this file in the resource directory.                    | `"log.json"`   |
 | `errorPages`     | A table of custom pages for different error codes (e.g., 404).                               | `{}`           |
@@ -54,6 +55,9 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 SetHttpHandler(exports.httpmanager:createHttpHandler {
 	rootDir = "root",
 	directoryIndex = "index.html",
+	auth = {
+		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"
+	},
 	log = true,
 	logFile = "log.json",
 	errorPages = {
@@ -72,6 +76,18 @@ SetHttpHandler(exports.httpmanager:createHttpHandler {
 		end
 	}
 })
+```
+
+## Authorization
+
+Access to a handler can be controlled by the `auth` option. If `auth` is unset, then no restrictions are applied. If `auth` is a table of usernames and passwords, then access will only be granted once a client has been authenticated using one of these username/password combinations.
+
+Passwords in the `auth` table must be hashed. httpmanager includes a built-in utility for generating password hashes, which can be accessed at `http://[server IP]:[server port]/httpmanager/password/`.
+
+```lua
+auth = {
+	["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"
+}
 ```
 
 ## Routes

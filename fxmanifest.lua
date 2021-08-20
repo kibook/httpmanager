@@ -11,6 +11,8 @@ server_only "yes"
 server_scripts {
 	"url.lua",
 	"mime.lua",
+	"base64.lua",
+	"hash.lua",
 	"httphandler.lua",
 	"main.lua"
 }
