@@ -295,8 +295,8 @@ local function createHttpHandler(options)
 			if #matches > 0 then
 				req.url = url
 
-				res.sendError = function(code)
-					sendError(req, res, code)
+				res.sendError = function(code, headers)
+					sendError(req, res, code, headers)
 				end
 
 				res.sendFile = function(path)
