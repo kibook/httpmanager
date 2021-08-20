@@ -130,3 +130,61 @@ routes = {
 	end
 }
 ```
+
+The `req`, `res`, and `helpers` arguments provide the interface for getting data from clients and sending data back to clients.
+
+### `req`
+
+The incoming request from the client.
+
+#### `req.path`
+
+The raw path of the request.
+
+#### `req.url`
+
+The parsed URL, containing the normalized path (`url.path`) and query parameters (`url.query`).
+
+#### `req.method`
+
+The HTTP method of the request.
+
+#### `req.headers`
+
+The HTTP headers of the request.
+
+### `res`
+
+The response that will be sent back to the client.
+
+#### `res.writeHead(code, [headers])`
+
+Sets the HTTP status code and other headers of the response.
+
+#### `res.write(data)`
+
+Writes data to the body of the response without closing it.
+
+#### `res.send(data)`
+
+Writes data to the body of the response and closes it. No arguments will close the response without sending any additional data.
+
+#### `res.sendError(code, [headers])`
+
+Sends an error page as the response.
+
+#### `res.sendFile(path)`
+
+Sends a file as the response.
+
+#### `res.sendJson(data, [code, [headers]])`
+
+Sends JSON data as the response. If `data` is a string, it is sent as-is. If `data` is not a string, it is encoded to a string with `json.encode`.
+
+### `helpers`
+
+Other helper functions.
+
+#### `helpers.log(entry)`
+
+Add an entry to the log. `entry` is a table that can contain any fields.
