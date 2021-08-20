@@ -214,7 +214,7 @@ local function createHttpHandler(options)
 			return false
 		end
 
-		if not verifyPassword(password, options.auth[username]) then
+		if not verifyPassword(password, options.authorization[username]) then
 			return false
 		end
 
@@ -224,7 +224,7 @@ local function createHttpHandler(options)
 	end
 
 	return function(req, res)
-		if options.auth and not isAuthorized(req) then
+		if options.authorization and not isAuthorized(req) then
 			sendError(res, 401, {
 				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(resourceName)
 			})
