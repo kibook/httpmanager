@@ -4,6 +4,7 @@ local mainResourceName = GetCurrentResourceName()
 local defaultOptions = {
 	documentRoot = "files",
 	directoryIndex = "index.html",
+	access = {},
 	log = false,
 	logFile = "log.json",
 	errorPages = {},
@@ -189,15 +190,24 @@ local function createHttpHandler(options)
 		return statusCode
 	end
 
-	local function isAuthorized(req)
+	local function isAuthorized(req, path)
+		local login
+
+		for i = #options.access, 1, -1 do
+			if path:match(options.access[i].path) then
+				login = options.access[i].login
+				break
+			end
+		end
+
+		if login == false then
+			return true
+		end
+
 		local auth = req.headers.Authorization
 
 		if not auth then
 			return false
-		end
-
-		if authorizations[auth] then
-			return true
 		end
 
 		local encoded = auth:match("^Basic (.+)$")
@@ -214,6 +224,14 @@ local function createHttpHandler(options)
 			return false
 		end
 
+		if login and not login[username] then
+			return false
+		end
+
+		if authorizations[auth] then
+			return true
+		end
+
 		if not options.authorization[username] then
 			return false
 		end
@@ -228,14 +246,14 @@ local function createHttpHandler(options)
 	end
 
 	return function(req, res)
-		if options.authorization and not isAuthorized(req) then
+		local url = Url.normalize(req.path)
+
+		if options.authorization and not isAuthorized(req, url.path) then
 			sendError(res, 401, {
 				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(resourceName)
 			})
 			return
 		end
-
-		local url = Url.normalize(req.path)
 
 		for pattern, callback in pairs(options.routes) do
 			local matches = {url.path:match(pattern)}

@@ -45,6 +45,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 | `documentRoot`   | The directory in the resource folder where files are served from.                            | `"files"`      |
 | `directoryIndex` | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
 | `authorization`  | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
+| `access`         | A table of paths with which users can access them.                                           | `{}`           |
 | `log`            | Whether to log requests to a file in the resource directory.                                 | `false`        |
 | `logFile`        | If `log` is `true`, store the log in this file in the resource directory.                    | `"log.json"`   |
 | `errorPages`     | A table of custom pages for different error codes (e.g., 404).                               | `{}`           |
@@ -56,7 +57,13 @@ SetHttpHandler(exports.httpmanager:createHttpHandler {
 	documentRoot = "root",
 	directoryIndex = "index.html",
 	authorization = {
-		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"
+		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q",
+		["user"] = "$2a$11$ILOCJlRiUPhRpmqYiZDDM.EdI16yOtMBTLJKTBLSUHTFzyXjXHJYa"
+	},
+	access = {
+		{path = "/admin/.*", login = {["admin"] = true}},
+		{path = "/public/.*", login = false},
+		{path = "/public/secret/.*"}
 	},
 	log = true,
 	logFile = "log.json",
@@ -89,6 +96,20 @@ authorization = {
 	["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"
 }
 ```
+
+Access can be further refined using the `access` option. `access` is a table of rules that each specify a path pattern and which users (as defined in the `authorization` table) can access it.
+
+```lua
+access = {
+	{path = "/admin/.*", login = {["admin"] = true}},
+	{path = "/public/.*", login = false},
+	{path = "/public/secret/.*"}
+}
+```
+
+In this example, anything under `/admin/` can only be accessed by the user `admin`, and no other users in the `authorization` table. Things under `/public/` require no login, and can be accessed by anyone. However, the last rule adds an exception, where anything under `/public/secret/` goes back to the default of allowing only authorized users access.
+
+Access rules are read in reverse order, so later rules will override earlier rules.
 
 ## Routes
 
