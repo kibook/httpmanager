@@ -109,7 +109,7 @@ access = {
 
 In this example, anything under `/admin/` can only be accessed by the user `admin`, and no other users in the `authorization` table. Things under `/public/` require no login, and can be accessed by anyone. However, the last rule adds an exception, where anything under `/public/secret/` goes back to the default of allowing only authorized users access.
 
-Access rules are read in reverse order, so later rules will override earlier rules.
+The `path` in an access rule is a [Lua pattern](https://www.lua.org/pil/20.2.html). Access rules are tested in reverse order, so later rules will override earlier rules.
 
 ## Routes
 
