@@ -15,7 +15,7 @@ local defaultOptions = {
 -- The size of each block used when reading a file on disk
 local blockSize = 131072
 
--- Maximum number of bytes to send in one response
+-- Maximum number of bytes to send in one ranged response
 local maxContentLength = 5242880
 
 local function createHttpHandler(options)
@@ -132,7 +132,11 @@ local function createHttpHandler(options)
 			f:seek("set", startBytes)
 
 			if not endBytes then
-				endBytes = math.min(startBytes + maxContentLength, fileSize) - 1
+				if req.headers.Range then
+					endBytes = math.min(startBytes + maxContentLength, fileSize) - 1
+				else
+					endBytes = fileSize - 1
+				end
 			end
 
 			local headers = {
@@ -156,7 +160,13 @@ local function createHttpHandler(options)
 
 			Citizen.CreateThread(function()
 				if req.method ~= "HEAD" then
-					while true do
+					local cancelled = false
+
+					req.setCancelHandler(function()
+						cancelled = true
+					end)
+
+					while not cancelled do
 						if startBytes > endBytes then
 							break
 						end
