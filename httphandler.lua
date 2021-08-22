@@ -2,7 +2,7 @@ local mainResourceName = GetCurrentResourceName()
 
 -- Default options for new HTTP handlers
 local defaultOptions = {
-	documentRoot = "files",
+	documentRoot = "http",
 	directoryIndex = "index.html",
 	access = {},
 	log = false,

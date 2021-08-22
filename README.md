@@ -12,7 +12,7 @@ HTTP handler utility for FiveM and RedM. It can be used as a simple file server,
 
 ## As a standalone file server
 
-After installing, you can place files in the `files` folder inside the `httpmanager` resource folder, and those files will be accessible at:
+After installing, you can place files in the `http` folder inside the `httpmanager` resource folder, and those files will be accessible at:
 
 ```
 http://[server IP]:[server port]/httpmanager/...
@@ -22,7 +22,7 @@ or
 https://[owner]-[server ID].users.cfx.re/httpmanager/...
 ```
 
-For example, if you place a file named `test.html` in the `files` folder, it would be accessible at `http://[server IP]:[server port]/httpmanager/test.html`.
+For example, if you place a file named `test.html` in the `http` folder, it would be accessible at `http://[server IP]:[server port]/httpmanager/test.html`.
 
 ## In other resources
 
@@ -42,7 +42,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 
 | Option           | Description                                                                                  | Default        |
 |------------------|----------------------------------------------------------------------------------------------|----------------|
-| `documentRoot`   | The directory in the resource folder where files are served from.                            | `"files"`      |
+| `documentRoot`   | The directory in the resource folder where files are served from.                            | `"http"`       |
 | `directoryIndex` | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
 | `authorization`  | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
 | `access`         | A table of paths with which users can access them.                                           | `{}`           |
