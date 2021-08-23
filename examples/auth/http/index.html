@@ -1,0 +1,13 @@
+<html>
+	<head>
+		<title>Secret Page</title>
+	</head>
+	<body>
+		<h1>Secret Page</h1>
+		<p>You are logged in as <span id="username"></span>.</p>
+		<script>
+			fetch('username').then(resp => resp.json()).then(resp => document.getElementById('username').innerHTML = resp.username);
+		</script>
+		<p>Any authorized user can see this page.</p>
+	</body>
+</html>

@@ -7,5 +7,10 @@ SetHttpHandler(exports.httpmanager:createHttpHandler {
 		{path = "/admin/.*", login = {["admin"] = true}},
 		{path = "/public/.*", login = false},
 		{path = "/public/secret/.*"}
+	},
+	routes = {
+		["/username"] = function(req, res, helpers)
+			res.sendJson{username = req.user}
+		end
 	}
 })

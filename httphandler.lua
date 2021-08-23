@@ -278,6 +278,8 @@ local function createHttpHandler(options)
 			return false
 		end
 
+		req.user = username
+
 		if authorizations[auth] then
 			return true
 		end

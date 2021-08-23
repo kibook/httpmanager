@@ -153,6 +153,10 @@ The HTTP method of the request.
 
 The HTTP headers of the request.
 
+#### `req.user`
+
+If authentication is required, this will contain the authenticated name of the user.
+
 #### `req.readJson(cb)`
 
 Reads the body of the request as JSON, and passes the result to the callback function `cb`:
