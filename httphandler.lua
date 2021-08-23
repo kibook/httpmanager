@@ -208,6 +208,12 @@ local function createHttpHandler(options)
 		return statusCode
 	end
 
+	local function readJson(req, cb)
+		req.setDataHandler(function(body)
+			cb(json.decode(body))
+		end)
+	end
+
 	local function sendJson(req, res, data, code, headers)
 		if not code then
 			code = 200
@@ -304,6 +310,10 @@ local function createHttpHandler(options)
 
 			if #matches > 0 then
 				req.url = url
+
+				req.readJson = function(cb)
+					readJson(req, cb)
+				end
 
 				res.sendError = function(code, headers)
 					sendError(req, res, code, headers)

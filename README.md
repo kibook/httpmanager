@@ -153,6 +153,18 @@ The HTTP method of the request.
 
 The HTTP headers of the request.
 
+#### `req.readJson(cb)`
+
+Reads the body of the request as JSON, and passes the result to the callback function `cb`:
+
+```lua
+-- POST request: /multiply-by-two
+-- POST body: {"input": 3}
+req.readJson(function(data)
+	res.sendJson{output = data.input * 2}
+end)
+```
+
 ### `res`
 
 The response that will be sent back to the client.
