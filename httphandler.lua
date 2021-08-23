@@ -145,7 +145,7 @@ local function createHttpHandler(options)
 				["Accept-Ranges"] = "bytes"
 			}
 
-			if endBytes < fileSize - 1 then
+			if startBytes > 0 or endBytes < fileSize - 1 then
 				statusCode = 206
 
 				headers["Content-Range"] = ("bytes %d-%d/%d"):format(startBytes, endBytes, fileSize)
