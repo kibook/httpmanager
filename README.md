@@ -247,9 +247,9 @@ elseif lang == "fr" then
 else
 	return "Number of players"
 end
-}:</strong> ${#GetPlayers()}!</p>
+}:</strong> ${#GetPlayers()}</p>
 ```
 
 Variables can be defined in the `env` parameter to the template helper functions. A `request` variable always exists and contains the request information, just like a route callback.
 
-The `templateExtension` option to [`createHttpHandler`](createhttphandler) allows specifying an extension for HTML files which are automatically processed as templates. The default extension is `.lsp`, so a file named `mypage.lsp` will be automatically processed as a template when it is requested.
+The `templateExtension` option to [`createHttpHandler`](#createhttphandler) allows specifying an extension for HTML files which are automatically processed as templates. The default extension is `.lsp`, so a file named `mypage.lsp` will be automatically processed as a template when it is requested.
