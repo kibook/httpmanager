@@ -44,7 +44,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 |---------------------|----------------------------------------------------------------------------------------------|----------------|
 | `documentRoot`      | The directory in the resource folder where files are served from.                            | `"http"`       |
 | `directoryIndex`    | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
-| `templateExtension` | File extension for files that will be preprocessed as templates.                             | `"lsp"`        |
+| `templateExtension` | File extension for files that will be automatically preprocessed as templates.               | `"lsp"`        |
 | `authorization`     | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
 | `access`            | A table of paths with which users can access them.                                           | `{}`           |
 | `log`               | Whether to log requests to a file in the resource directory.                                 | `false`        |
@@ -57,6 +57,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 SetHttpHandler(exports.httpmanager:createHttpHandler {
 	documentRoot = "root",
 	directoryIndex = "index.html",
+	templateExtension = "html",
 	authorization = {
 		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q",
 		["user"] = "$2a$11$ILOCJlRiUPhRpmqYiZDDM.EdI16yOtMBTLJKTBLSUHTFzyXjXHJYa"
@@ -202,7 +203,7 @@ Sends JSON data as the response. If `data` is a string, it is sent as-is. If `da
 
 Processes and sends a template string as the response.
 
-#### `response.sendTemplateFile(path, [env, [code, [headers]]])
+#### `response.sendTemplateFile(path, [env, [code, [headers]]])`
 
 Processes and sends a template file as the response.
 
