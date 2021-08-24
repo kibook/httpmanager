@@ -26,7 +26,7 @@ For example, if you place a file named `test.html` in the `http` folder, it woul
 
 ## In other resources
 
-You can quickly add HTTP functionality to any resource using the [`createHttpHandler`](#createhttphandler) export:
+You can quickly add HTTP functionality to any resource using the `createHttpHandler` export:
 
 ```lua
 handler = exports.httpmanager:createHttpHandler(options)
@@ -252,4 +252,4 @@ end
 
 Variables can be defined in the `env` parameter to the template helper functions. A `request` variable always exists and contains the request information, just like a route callback.
 
-The `templateExtension` option to [`createHttpHandler`](#createhttphandler) allows specifying an extension for HTML files which are automatically processed as templates. The default extension is `.lsp`, so a file named `mypage.lsp` will be automatically processed as a template when it is requested.
+The `templateExtension` option to `createHttpHandler` allows specifying an extension for HTML files which are automatically processed as templates. The default extension is `.lsp`, so a file named `mypage.lsp` will be automatically processed as a template when it is requested.
