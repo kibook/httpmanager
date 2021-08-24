@@ -4,6 +4,7 @@ local mainResourceName = GetCurrentResourceName()
 local defaultOptions = {
 	documentRoot = "http",
 	directoryIndex = "index.html",
+	templateExtension = "lsp",
 	access = {},
 	log = false,
 	logFile = "log.json",
@@ -40,8 +41,12 @@ local function createHttpHandler(options)
 
 	local authorizations = {}
 
+	local function getExtension(path)
+		return path:match("^.+%.(.+)$")
+	end
+
 	local function getMimeType(path)
-		local extension = path:match("^.+%.(.+)$")
+		local extension = getExtension(path)
 
 		if options.mimeTypes[extension] then
 			return options.mimeTypes[extension]
@@ -57,7 +62,7 @@ local function createHttpHandler(options)
 			code = 500
 		end
 
-		if not headers then
+		if type(headers) ~= "table" then
 			headers = {}
 		end
 
@@ -106,9 +111,82 @@ local function createHttpHandler(options)
 		SaveResourceFile(resourceName, options.logFile, json.encode(handlerLog), -1)
 	end
 
+	local function sendTemplate(req, res, content, name, env, code, headers)
+		if type(env) ~= "table" then
+			env = {}
+		end
+
+		for k, v in pairs(_G) do
+			env[k] = v
+		end
+
+		env.request = req
+
+		if not code then
+			code = 200
+		end
+
+		if type(headers) ~= "table" then
+			headers = {}
+		end
+
+		if not headers["Content-Type"] then
+			headers["Content-Type"] = "text/html"
+		end
+
+		local parsed = content
+
+		parsed = parsed:gsub("(%%%b{})", function(w)
+			local fn, err = load(w:sub(3, -2), name, "t", env)
+
+			if fn then
+				local status, res = pcall(fn)
+				return res
+			else
+				return err
+			end
+		end)
+
+		parsed = parsed:gsub("($%b{})", function(w)
+			local fn, err = load("return (" .. w:sub(3, -2) .. ")", nil, "t", env)
+
+			if fn then
+				local status, res = pcall(fn)
+				return res
+			else
+				return err
+			end
+		end)
+
+		res.writeHead(code, headers)
+		res.send(parsed)
+	end
+
+	local function getAbsolutePath(path)
+		if path:sub(1, 1) ~= "/" then
+			path = "/" .. path
+		end
+
+		return resourcePath .. "/" .. options.documentRoot .. path
+	end
+
+	local function sendTemplateFile(req, res, path, env, code, headers)
+		local absolutePath = getAbsolutePath(path)
+
+		local f = io.open(absolutePath, "rb")
+
+		if f then
+			local content = f:read("*all")
+			f:close()
+
+			sendTemplate(req, res, content, path, env, code, headers)
+		else
+			sendError(req, res, 404)
+		end
+	end
+
 	local function sendFile(req, res, path)
-		local relativePath = options.documentRoot .. path
-		local absolutePath = resourcePath .. "/" .. relativePath
+		local absolutePath = getAbsolutePath(path)
 
 		local mimeType = getMimeType(absolutePath)
 
@@ -219,7 +297,7 @@ local function createHttpHandler(options)
 			code = 200
 		end
 
-		if not headers then
+		if type(headers) ~= "table" then
 			headers = {}
 		end
 
@@ -300,6 +378,8 @@ local function createHttpHandler(options)
 	return function(req, res)
 		local url = Url.normalize(req.path)
 
+		req.url = url
+
 		if options.authorization and not isAuthorized(req, url.path) then
 			sendError(req, res, 401, {
 				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(resourceName)
@@ -311,8 +391,6 @@ local function createHttpHandler(options)
 			local matches = {url.path:match(pattern)}
 
 			if #matches > 0 then
-				req.url = url
-
 				req.readJson = function(cb)
 					readJson(req, cb)
 				end
@@ -327,6 +405,14 @@ local function createHttpHandler(options)
 
 				res.sendJson = function(data, code, headers)
 					sendJson(req, res, data, code, headers)
+				end
+
+				res.sendTemplate = function(content, env, code, headers)
+					sendTemplate(req, res, content, url.path, env, code, headers)
+				end
+
+				res.sendTemplateFile = function(path, env, code, headers)
+					sendTemplateFile(req, res, path, env, code, headers)
 				end
 
 				local helpers = {
@@ -357,7 +443,13 @@ local function createHttpHandler(options)
 				url.path = url.path .. options.directoryIndex
 			end
 
-			sendFile(req, res, url.path)
+			local extension = getExtension(url.path)
+
+			if extension == options.templateExtension then
+				sendTemplateFile(req, res, url.path)
+			else
+				sendFile(req, res, url.path)
+			end
 		else
 			sendError(req, res, 404)
 		end

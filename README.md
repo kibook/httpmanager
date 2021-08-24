@@ -40,17 +40,18 @@ SetHttpHandler(exports.httpmanager:createHttpHandler())
 
 `options` is a table containing configuration options for the new handler. Any unspecified options will be given their default value.
 
-| Option           | Description                                                                                  | Default        |
-|------------------|----------------------------------------------------------------------------------------------|----------------|
-| `documentRoot`   | The directory in the resource folder where files are served from.                            | `"http"`       |
-| `directoryIndex` | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
-| `authorization`  | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
-| `access`         | A table of paths with which users can access them.                                           | `{}`           |
-| `log`            | Whether to log requests to a file in the resource directory.                                 | `false`        |
-| `logFile`        | If `log` is `true`, store the log in this file in the resource directory.                    | `"log.json"`   |
-| `errorPages`     | A table of custom pages for different error codes (e.g., 404).                               | `{}`           |
-| `mimeTypes`      | A table of MIME type associations for extensions, which will override any detected type.     | `{}`           |
-| `routes`         | A table of route patterns and callbacks.                                                     | `{}`           |
+| Option              | Description                                                                                  | Default        |
+|---------------------|----------------------------------------------------------------------------------------------|----------------|
+| `documentRoot`      | The directory in the resource folder where files are served from.                            | `"http"`       |
+| `directoryIndex`    | If the path points to a directory, a file with this name inside that directory will be sent. | `"index.html"` |
+| `templateExtension` | File extension for files that will be preprocessed as templates.                             | `"lsp"`        |
+| `authorization`     | A table of usernames and passwords required to access any files or routes.                   | `nil`          |
+| `access`            | A table of paths with which users can access them.                                           | `{}`           |
+| `log`               | Whether to log requests to a file in the resource directory.                                 | `false`        |
+| `logFile`           | If `log` is `true`, store the log in this file in the resource directory.                    | `"log.json"`   |
+| `errorPages`        | A table of custom pages for different error codes (e.g., 404).                               | `{}`           |
+| `mimeTypes`         | A table of MIME type associations for extensions, which will override any detected type.     | `{}`           |
+| `routes`            | A table of route patterns and callbacks.                                                     | `{}`           |
 
 ```lua
 SetHttpHandler(exports.httpmanager:createHttpHandler {
@@ -121,81 +122,89 @@ An example route is `/players/(%d+)`. This would match a URL like `/players/3`. 
 
 ```lua
 routes = {
-	["/players/(%d+)"] = function(req, res, helpers, player)
+	["/players/(%d+)"] = function(request, response, helpers, player)
 		if GetPlayerEndpoint(player) then
-			res.send(GetPlayerName(player))
+			response.send(GetPlayerName(player))
 		else
-			res.sendError(404)
+			response.sendError(404)
 		end
 	end
 }
 ```
 
-The `req`, `res`, and `helpers` arguments provide the interface for getting data from clients and sending data back to clients.
+The `request`, `response`, and `helpers` arguments provide the interface for getting data from clients and sending data back to clients.
 
-### `req`
+### `request`
 
 The incoming request from the client.
 
-#### `req.path`
+#### `request.path`
 
 The raw path of the request.
 
-#### `req.url`
+#### `request.url`
 
 The parsed URL, containing the normalized path (`url.path`) and query parameters (`url.query`).
 
-#### `req.method`
+#### `request.method`
 
 The HTTP method of the request.
 
-#### `req.headers`
+#### `request.headers`
 
 The HTTP headers of the request.
 
-#### `req.user`
+#### `request.user`
 
 If authentication is required, this will contain the authenticated name of the user.
 
-#### `req.readJson(cb)`
+#### `request.readJson(cb)`
 
 Reads the body of the request as JSON, and passes the result to the callback function `cb`:
 
 ```lua
 -- POST request: /multiply-by-two
 -- POST body: {"input": 3}
-req.readJson(function(data)
-	res.sendJson{output = data.input * 2}
+request.readJson(function(data)
+	response.sendJson{output = data.input * 2}
 end)
 ```
 
-### `res`
+### `response`
 
 The response that will be sent back to the client.
 
-#### `res.writeHead(code, [headers])`
+#### `response.writeHead(code, [headers])`
 
 Sets the HTTP status code and other headers of the response.
 
-#### `res.write(data)`
+#### `response.write(data)`
 
 Writes data to the body of the response without closing it.
 
-#### `res.send(data)`
+#### `response.send(data)`
 
 Writes data to the body of the response and closes it. No arguments will close the response without sending any additional data.
 
-#### `res.sendError(code, [headers])`
+#### `response.sendError(code, [headers])`
 
 Sends an error page as the response.
 
-#### `res.sendFile(path)`
+#### `response.sendFile(path)`
 
 Sends a file as the response.
 
-#### `res.sendJson(data, [code, [headers]])`
+#### `response.sendJson(data, [code, [headers]])`
 
 Sends JSON data as the response. If `data` is a string, it is sent as-is. If `data` is not a string, it is encoded to a string with `json.encode`.
+
+#### `response.sendTemplate(content, [env, [code, [headers]]])`
+
+Processes and sends a template string as the response.
+
+#### `response.sendTemplateFile(path, [env, [code, [headers]]])
+
+Processes and sends a template file as the response.
 
 ### `helpers`
 
@@ -204,3 +213,42 @@ Other helper functions.
 #### `helpers.log(entry)`
 
 Add an entry to the log. `entry` is a table that can contain any fields.
+
+## Templates
+
+Templates are strings or files which may contain variables or pieces of Lua code, which are preprocessed server-side before being sent in a response.
+
+There are two kinds of directives that can be used in a template:
+
+- `${...}` is replaced by the value of the expression inside.
+- `%{...}` is replaced by the return value of the block inside.
+
+### Expression directive
+
+```html
+<p>Hello, ${name}!</p>
+```
+
+```lua
+response.sendTemplateFile("test.html", {name = "Alice"})
+```
+
+### Block directive
+
+```html
+<p><strong>%{
+local lang = request.url.query["lang"]
+
+if lang == "es" then
+	return "Numero de jugadores"
+elseif lang == "fr" then
+	return "Nombre de joueurs"
+else
+	return "Number of players"
+end
+}:</strong> ${#GetPlayers()}!</p>
+```
+
+Variables can be defined in the `env` parameter to the template helper functions. A `request` variable always exists and contains the request information, just like a route callback.
+
+The `templateExtension` option to [`createHttpHandler`](createhttphandler) allows specifying an extension for HTML files which are automatically processed as templates. The default extension is `.lsp`, so a file named `mypage.lsp` will be automatically processed as a template when it is requested.
