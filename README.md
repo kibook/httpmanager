@@ -99,6 +99,34 @@ authorization = {
 }
 ```
 
+Rather than defining users separately for every resource, you can define central groups of users using realms. Realms are configured in [realms.lua](realms.lua):
+
+```lua
+Realms = {
+	["default"] = {
+		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"
+	},
+	["realm1"] = {
+		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q",
+		["user1"] = "$2a$11$4RIDavyfsCw/vhImQdDYcOKgCnnJ0ZcJQCFeM8wfF1jkEGN/YnOOG",
+		["user2"] = "$2a$11$dMe9J7jkhg8N5E/VArrEn.1UKhB9QocNqDopPJkcRNXQ1p4KQDdQG"
+	},
+	["realm2"] = {
+		...
+	}
+}
+```
+
+To use a realm, specify its name as a string for `authorization`:
+
+```lua
+SetHttpHandler(exports.httpmanager:createHttpHandler{
+	authorization = "realm1"
+})
+```
+
+Resources which use the same realm will share the same logins, allowing users to go between them without re-entering their password.
+
 Access can be further refined using the `access` option. `access` is a table of rules that each specify a path pattern and which users (as defined in the `authorization` table) can access it.
 
 ```lua

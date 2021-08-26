@@ -41,6 +41,15 @@ local function createHttpHandler(options)
 
 	local authorizations = {}
 
+	local realm
+
+	if type(options.authorization) == "string" then
+		realm = options.authorization
+		options.authorization = Realms[realm] or {}
+	else
+		realm = resourceName
+	end
+
 	local function getExtension(path)
 		return path:match("^.+%.(.+)$")
 	end
@@ -382,7 +391,7 @@ local function createHttpHandler(options)
 
 		if options.authorization and not isAuthorized(req, url.path) then
 			sendError(req, res, 401, {
-				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(resourceName)
+				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(realm)
 			})
 			return
 		end

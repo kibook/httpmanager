@@ -11,6 +11,7 @@ server_scripts {
 	"mime.lua",
 	"base64.lua",
 	"hash.lua",
+	"realms.lua",
 	"httphandler.lua",
 	"main.lua"
 }
