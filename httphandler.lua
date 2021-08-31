@@ -466,3 +466,23 @@ local function createHttpHandler(options)
 end
 
 exports("createHttpHandler", createHttpHandler)
+
+exports("getUrl", function(resourceName)
+	local baseUrl = GetConvar("web_baseUrl", "")
+
+	local protocol, endpoint
+
+	if baseUrl == "" then
+		protocol = "http"
+		endpoint = "[server IP]:[server port]"
+	else
+		protocol = "https"
+		endpoint = baseUrl
+	end
+
+	if not resourceName then
+		resourceName = GetInvokingResource() or mainResourceName
+	end
+
+	return ("%s://%s/%s/"):format(protocol, endpoint, resourceName)
+end)
