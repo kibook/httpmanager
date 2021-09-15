@@ -295,10 +295,20 @@ local function createHttpHandler(options)
 		return statusCode
 	end
 
-	local function readJson(req, cb)
+	local function readJson(req)
+		local p = promise.new()
+
 		req.setDataHandler(function(body)
-			cb(json.decode(body))
+			local data = json.decode(body)
+
+			if data == nil then
+				p:reject("Request body contains invalid JSON")
+			else
+				p:resolve(data)
+			end
 		end)
+
+		return p
 	end
 
 	local function sendJson(req, res, data, code, headers)
@@ -400,8 +410,8 @@ local function createHttpHandler(options)
 			local matches = {url.path:match(pattern)}
 
 			if #matches > 0 then
-				req.readJson = function(cb)
-					readJson(req, cb)
+				req.readJson = function()
+					return readJson(req)
 				end
 
 				res.sendError = function(code, headers)
