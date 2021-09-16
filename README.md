@@ -187,14 +187,14 @@ The HTTP headers of the request.
 
 If authentication is required, this will contain the authenticated name of the user.
 
-#### `request.readJson(cb)`
+#### `request.readJson()`
 
-Reads the body of the request as JSON, and passes the result to the callback function `cb`:
+Reads the body of the request as JSON, deserializes it, and returns a promise which is resolved with the result (or rejected with any errors encountered):
 
 ```lua
 -- POST request: /multiply-by-two
 -- POST body: {"input": 3}
-request.readJson(function(data)
+request.readJson():next(function(data)
 	response.sendJson{output = data.input * 2}
 end)
 ```
@@ -215,7 +215,7 @@ Writes data to the body of the response without closing it.
 
 Writes data to the body of the response and closes it. No arguments will close the response without sending any additional data.
 
-#### `response.sendError(code, [headers])`
+#### `response.sendError(code, [details, [headers]])`
 
 Sends an error page as the response.
 
