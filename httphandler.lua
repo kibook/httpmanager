@@ -28,7 +28,7 @@ local function createHttpHandler(options)
 	end
 
 	for key, defaultValue in pairs(defaultOptions) do
-		if not options[key] then
+		if options[key] == nil then
 			options[key] = defaultValue
 		end
 	end
@@ -66,9 +66,51 @@ local function createHttpHandler(options)
 		end
 	end
 
-	local function sendError(req, res, code, headers)
+	local function parseTemplate(content, name, env)
+		if type(env) ~= "table" then
+			env = {}
+		end
+
+		for k, v in pairs(_G) do
+			if env[k] == nil then
+				env[k] = v
+			end
+		end
+
+		local parsed = content
+
+		parsed = parsed:gsub("(%%%b{})", function(w)
+			local fn, err = load(w:sub(3, -2), name, "t", env)
+
+			if fn then
+				local status, res = pcall(fn)
+				return res or ""
+			else
+				return err
+			end
+		end)
+
+		parsed = parsed:gsub("($%b{})", function(w)
+			local fn, err = load("return (" .. w:sub(3, -2) .. ")", nil, "t", env)
+
+			if fn then
+				local status, res = pcall(fn)
+				return res or ""
+			else
+				return err
+			end
+		end)
+
+		return parsed
+	end
+
+	local function sendError(req, res, code, details, headers)
 		if not code then
 			code = 500
+		end
+
+		if details == nil then
+			details = false
 		end
 
 		if type(headers) ~= "table" then
@@ -97,9 +139,13 @@ local function createHttpHandler(options)
 			local data = LoadResourceFile(resource, path)
 
 			if data then
-				res.send(data)
+				res.send(parseTemplate(data, path, {details = details}))
 			else
-				res.send("Error: " .. code)
+				if details then
+					res.send("Error: " .. code .. ": " .. details)
+				else
+					res.send("Error: " .. code)
+				end
 			end
 		end
 	end
@@ -125,10 +171,6 @@ local function createHttpHandler(options)
 			env = {}
 		end
 
-		for k, v in pairs(_G) do
-			env[k] = v
-		end
-
 		env.request = req
 
 		if not code then
@@ -143,29 +185,7 @@ local function createHttpHandler(options)
 			headers["Content-Type"] = "text/html"
 		end
 
-		local parsed = content
-
-		parsed = parsed:gsub("(%%%b{})", function(w)
-			local fn, err = load(w:sub(3, -2), name, "t", env)
-
-			if fn then
-				local status, res = pcall(fn)
-				return res
-			else
-				return err
-			end
-		end)
-
-		parsed = parsed:gsub("($%b{})", function(w)
-			local fn, err = load("return (" .. w:sub(3, -2) .. ")", nil, "t", env)
-
-			if fn then
-				local status, res = pcall(fn)
-				return res
-			else
-				return err
-			end
-		end)
+		local parse = parseTemplate(content, name, env)
 
 		res.writeHead(code, headers)
 		res.send(parsed)
@@ -400,7 +420,7 @@ local function createHttpHandler(options)
 		req.url = url
 
 		if options.authorization and not isAuthorized(req, url.path) then
-			sendError(req, res, 401, {
+			sendError(req, res, 401, "Invalid login for realm: " .. realm, {
 				["WWW-Authenticate"] = ("Basic realm=\"%s\""):format(realm)
 			})
 			return
@@ -414,8 +434,8 @@ local function createHttpHandler(options)
 					return readJson(req)
 				end
 
-				res.sendError = function(code, headers)
-					sendError(req, res, code, headers)
+				res.sendError = function(code, details, headers)
+					sendError(req, res, code, details, headers)
 				end
 
 				res.sendFile = function(path)
@@ -470,7 +490,7 @@ local function createHttpHandler(options)
 				sendFile(req, res, url.path)
 			end
 		else
-			sendError(req, res, 404)
+			sendError(req, res, 404, "No route matches " .. url)
 		end
 	end
 end

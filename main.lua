@@ -15,7 +15,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler {
 				res.writeHead(200, {["Content-Type"] = "application/json"})
 				res.send(json.encode{hash = hashPassword(password)})
 			end, function(err)
-				res.sendError(400)
+				res.sendError(400, err)
 			end)
 		end
 	}
