@@ -107,7 +107,7 @@ Realms = {
 		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q"
 	},
 	["realm1"] = {
-		["admin"] = "$2a$11$HoxJPx5sTe4RX5qPw1OkSO.ukDdwAvGJwXtmyOE5i.1gz7EvN71.q",
+		inherit = "default",
 		["user1"] = "$2a$11$4RIDavyfsCw/vhImQdDYcOKgCnnJ0ZcJQCFeM8wfF1jkEGN/YnOOG",
 		["user2"] = "$2a$11$dMe9J7jkhg8N5E/VArrEn.1UKhB9QocNqDopPJkcRNXQ1p4KQDdQG"
 	},

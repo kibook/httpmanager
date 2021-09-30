@@ -516,3 +516,24 @@ exports("getUrl", function(resourceName)
 
 	return ("%s://%s/%s/"):format(protocol, endpoint, resourceName)
 end)
+
+-- Apply inheritance for realms
+for realm, users in pairs(Realms) do
+	if users.inherit and Realms[users.inherit] then
+		local inheritedRealms
+
+		if type(users.inherit) == "table" then
+			inheritedRealms = users.inherit
+		else
+			inheritedRealms = {users.inherit}
+		end
+
+		for _, inheritedRealm in ipairs(inheritedRealms) do
+			for username, password in pairs(Realms[inheritedRealm]) do
+				users[username] = password
+			end
+		end
+
+		users.inherit = nil
+	end
+end
