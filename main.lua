@@ -4,7 +4,7 @@ SetHttpHandler(exports.httpmanager:createHttpHandler {
 			req.readJson():next(function(data)
 				local p = promise.new()
 
-				if data.password then
+				if string.len(data.password) > 0 then
 					p:resolve(data.password)
 				else
 					p:reject("No password in the request data")
