@@ -185,7 +185,7 @@ local function createHttpHandler(options)
 			headers["Content-Type"] = "text/html"
 		end
 
-		local parse = parseTemplate(content, name, env)
+		local parsed = parseTemplate(content, name, env)
 
 		res.writeHead(code, headers)
 		res.send(parsed)
