@@ -187,6 +187,18 @@ The HTTP headers of the request.
 
 If authentication is required, this will contain the authenticated name of the user.
 
+#### `request.readBody()`
+
+Reads the body of the request, and returns a promise which is resolved with the raw body data:
+
+```lua
+-- POST request: /echo
+-- POST body: Hello
+request.readBody():next(function(body)
+	response.send(body)
+end)
+```
+
 #### `request.readJson()`
 
 Reads the body of the request as JSON, deserializes it, and returns a promise which is resolved with the result (or rejected with any errors encountered):

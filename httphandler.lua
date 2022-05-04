@@ -315,6 +315,16 @@ local function createHttpHandler(options)
 		return statusCode
 	end
 
+	local function readBody(req)
+		local p = promise.new()
+
+		req.setDataHandler(function(body)
+			p:resolve(body)
+		end)
+
+		return p
+	end
+
 	local function readJson(req)
 		local p = promise.new()
 
@@ -430,6 +440,10 @@ local function createHttpHandler(options)
 			local matches = {url.path:match(pattern)}
 
 			if #matches > 0 then
+				req.readBody = function()
+					return readBody(req)
+				end
+
 				req.readJson = function()
 					return readJson(req)
 				end
